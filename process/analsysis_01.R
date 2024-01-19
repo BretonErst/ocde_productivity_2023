@@ -47,6 +47,11 @@ gdphrs_evol <-
          destaca = location == "MEX")
 
 
+gdphrs_evol |> 
+  filter(location %in% c("MEX", "USA") &
+           time == 2022) |> 
+  select(country, GDPHRS)
+
 # plot de evolución en tiempo 1970 - 2022
 gdphrs_evol |> 
   ggplot(aes(x = time, y = GDPHRS, color = destaca, group = country)) +
@@ -141,7 +146,7 @@ gdphrs_spread |>
        y = NULL,
        x = "USD current PPPs",
        caption = "Source: OECD Stats. Gross Domestic Product Per Hour Worked
-         1990 - 2022. Selected countries. Median value in line. Value for 2022 in blue.
+         1990 - 2022. Selected countries. Value for 2022 in blue. Median value for 2022 in line.
          <br>Visualization: Juan L. Bretón, PMP | @juanlbreton") +
   scale_color_manual(values = c("#B8BBBC", "darkred")) +
   scale_x_continuous(labels = scales::dollar_format())
@@ -177,6 +182,11 @@ prod_hrwd_max |>
              y = reorder_within(country, value, as_factor(time)), 
              fill = as_factor(time))) +
   geom_col(alpha = 0.75) +
+  geom_text(aes(label = scales::number(value, accuracy = 1, big.mark = ",")),
+            family = "Encode Sans Condensed",
+            color = "grey30",
+            size = 2.90,
+            hjust = 1.1) +
   facet_grid(rows = vars(fct_rev(as_factor(time))), 
              scales = "free_y") +
   theme_breton() +
@@ -189,7 +199,8 @@ prod_hrwd_max |>
          1970 - 2022.
          <br>Visualization: Juan L. Bretón, PMP | @juanlbreton") +
   scale_y_reordered() +
-  scale_x_continuous(expand = c(0, 50)) +
+  scale_x_continuous(expand = c(0, 50),
+                     labels = scales::number_format(big.mark = ",")) +
   scale_fill_hue(c = 65, h = c(300, 140))
 
 
