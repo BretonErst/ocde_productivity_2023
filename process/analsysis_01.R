@@ -20,10 +20,10 @@ prod_00 <-
 
 
 
-# USD current PPPs
-prod_curr_ppp <- 
+# USD constant PPPs
+prod_const_ppp <- 
   prod_00 |> 
-  filter(measure == "USD, current prices, current PPPs") |> 
+  filter(measure == "USD, constant prices, 2015 PPPs") |> 
   pivot_wider(names_from = code, 
               values_from = value)
 
@@ -39,7 +39,7 @@ paises_evol <-
 
 # dataframe para evolución en tiempo
 gdphrs_evol <- 
-  prod_curr_ppp |> 
+  prod_const_ppp |> 
   filter(description == "GDP per hour worked") |> 
   filter(location %in% paises_evol) |> 
   mutate(max_val = if_else(time == max(time), 
@@ -54,7 +54,10 @@ gdphrs_evol |>
 
 # plot de evolución en tiempo 1970 - 2022
 gdphrs_evol |> 
-  ggplot(aes(x = time, y = GDPHRS, color = destaca, group = country)) +
+  ggplot(aes(x = time, 
+             y = GDPHRS,
+             color = destaca, 
+             group = country)) +
   geom_line(alpha = 0.65) +
   geom_text_repel(aes(label = max_val),
                   na.rm = TRUE,
@@ -66,7 +69,8 @@ gdphrs_evol |>
                   segment.linetype = "dotted") +
   theme_breton() +
   theme(legend.position = "none") +
-  scale_color_manual(values = c("darkgrey", "darkred")) +
+  scale_color_manual(breaks = c(FALSE, TRUE),
+                     values = c("#B8BBBC", "darkred")) +
   # scale_color_hue(l = 45, c = 85) +
   scale_x_continuous(breaks = seq(min(prod_curr_ppp$time), 
                                   max(prod_curr_ppp$time),
@@ -76,7 +80,7 @@ gdphrs_evol |>
   labs(title = "¿Cómo Ha Evolucionado La Productividad del Sistema Laboral Mexicano?",
        subtitle = "Producto interno bruto por hora trabajada",
        x = NULL,
-       y = "USD current PPPs",
+       y = "USD constant PPPs",
        caption = "Source: OECD Stats. Gross Domestic Product Per Hour Worked
          1970 - 2022. Selected countries.
          <br>Visualization: Juan L. Bretón, PMP | @juanlbreton") +
@@ -98,7 +102,7 @@ paises_spread <-
 
 # dataframe para spread
 gdphrs_spread <- 
-  prod_curr_ppp |> 
+  prod_const_ppp |> 
   filter(time > 1989) |>
   filter(description == "GDP per hour worked") |> 
   filter(location %in% paises_spread) |> 
@@ -122,15 +126,15 @@ gdphrs_spread |>
              color = destaca)) +
   geom_vline(xintercept = val_median,
              alpha = 0.15,
-             color = "darkgreen",
+             color = "midnightblue",
              linewidth = 2.5) +
   geom_jitter(alpha = 0.35,
               height = 0.15,
-              width = 0.01) +
+              width = 0.01,
+              size = 2.5) +
   geom_point(aes(x = ult_val),
-             size = 2.75,
              pch = 21,
-             size = 4,
+             size = 3.5,
              color = "midnightblue",
              fill = "midnightblue",
              alpha = 0.4) +
@@ -138,18 +142,22 @@ gdphrs_spread |>
                  x = val_median, 
                  y = 17.35),
              family = "Encode Sans Condensed",
-             size = 2.45) +
+             size = 4.45) +
   theme_breton() +
   theme(legend.position = "none") +
   labs(title = "¿Cuánto Ha Crecido La Productividad del Sistema Laboral Mexicano?",
        subtitle = "Dispersión del producto interno bruto por hora trabajada de 1990 a 2022",
        y = NULL,
-       x = "USD current PPPs",
+       x = "USD constant PPPs",
        caption = "Source: OECD Stats. Gross Domestic Product Per Hour Worked
          1990 - 2022. Selected countries. Value for 2022 in blue. Median value for 2022 in line.
          <br>Visualization: Juan L. Bretón, PMP | @juanlbreton") +
-  scale_color_manual(values = c("#B8BBBC", "darkred")) +
-  scale_x_continuous(labels = scales::dollar_format())
+  scale_color_manual(breaks = c(FALSE, TRUE),
+                     values = c("#B8BBBC", "#C64F45")) +
+  scale_x_continuous(breaks = seq(min(gdphrs_spread$GDPHRS),
+                                  max(gdphrs_spread$GDPHRS),
+                                  8),
+                     labels = scales::dollar_format())
   
 
 # guarda gráfica
@@ -185,7 +193,7 @@ prod_hrwd_max |>
   geom_text(aes(label = scales::number(value, accuracy = 1, big.mark = ",")),
             family = "Encode Sans Condensed",
             color = "grey30",
-            size = 2.90,
+            size = 3.90,
             hjust = 1.1) +
   facet_grid(rows = vars(fct_rev(as_factor(time))), 
              scales = "free_y") +
@@ -211,9 +219,11 @@ ggsave(filename = "figures/hrwd_max.jpg",
 
 
 prod_hrwd_max |> 
-  pivot_wider(names_from = time, values_from = value, names_prefix = "y_") |> 
-  filter(location %in% c("MEX", "COL")) |> 
-  reframe(change = (y_2022 - y_2020) / y_2020)
+  pivot_wider(names_from = time, 
+              values_from = value, 
+              names_prefix = "y_") |> 
+  filter(location %in% c("MEX", "COL", "KOR")) |> 
+  reframe(change = (y_2022 - y_2020) / y_2020) * 100
 
 
 
